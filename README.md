@@ -49,7 +49,8 @@ NTUGuessr/
 │
 ├── .gitignore              # Root-level ignore rules
 ├── README.md               # Root project readme
-└── LICENSE                 # Project license
+├── LICENSE                 # Project license
+└── setup.py                # Auto env setup script
 ```
 
 ---
