@@ -36,7 +36,7 @@ NTUGuessr/
 │   └── .env
 │
 ├── telegram-bot/           # Telegram bot integration
-│   ├── bot.py              # Bot entry point
+│   ├── main.py             # Bot entry point
 │   ├── requirements.txt    # Bot dependencies
 │   └── .env
 │
