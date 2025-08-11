@@ -64,18 +64,18 @@ NTUGuessr/
 
 2. **Setup Backend**
 
-   - See [backend/README.md](backend/README.md) for instructions.
+   - See [Backend/README.md](Backend/README.md) for instructions.
 
 3. **Setup Frontend**
 
-   - See [frontend/README.md](frontend/README.md) for instructions.
+   - See [Frontend/README.md](Frontend/README.md) for instructions.
 
 4. **Setup Telegram Bot** (optional)
 
-   - See [telebot/README.md](telebot/README.md) for instructions.
+   - See [TeleBot/README.md](TeleBot/README.md) for instructions.
 
 5. **Setup Admin Panel**
-   - See [admin-panel/README.md](admin-panel/README.md) for instructions.
+   - See [Admin_Panel/README.md](Admin_Panel/README.md) for instructions.
    - ⚠ **Note:** Currently no authentication is implemented — the panel interacts directly with Supabase without going through the backend. Future updates will include backend integration and admin role permissions.
 
 ---
