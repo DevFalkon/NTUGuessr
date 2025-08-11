@@ -107,7 +107,7 @@ Create a public storage bucket named locs in your Supabase dashboard:
 
 5. Save the bucket.
 
-This bucket will store approved game images accessible by the frontend and bot. 4. Proceed with Component Setups
+This bucket will store approved game images accessible by the frontend and bot.
 
 ### 4. Create Telegram Bot
 
@@ -132,7 +132,7 @@ Follow the interactive prompts to enter:
 
 1. Supabase project URL and keys
 
-2. Telegram Bot API keyB
+2. Telegram Bot API key
 
 3. ackend URL (optional, can be manually added later)
 
