@@ -56,6 +56,7 @@ admin-panel/ # Next.js admin panel
 ## 🖥️ Architecture Overview
 
 ```mermaid
+%%{init: {"theme": "default", "themeVariables": { "primaryColor": "#E0E0E0" }, "flowchart": { "useMaxWidth": false, "htmlLabels": true }, "securityLevel": "strict" }}%%
 graph TD
 
     subgraph Frontend
