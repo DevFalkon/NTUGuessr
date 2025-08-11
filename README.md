@@ -158,7 +158,7 @@ After the script completes, you can start each component as usual.
 
 3.  [TeleBot/README.md](TeleBot/README.md)
 
-4.  [Admin_Panel/README.md](Admin_Panel/README.md)
+4.  [Admin_panel/README.md](Admin_panel/README.md)
     - ⚠ **Note:** Currently no authentication is implemented — the panel interacts directly with Supabase without going through the backend. Future updates will include backend integration and admin role permissions.
 
 ---

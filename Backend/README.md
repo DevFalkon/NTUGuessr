@@ -65,8 +65,8 @@ Add this to the frontend `.env`
 
 ## 📄 Notes
 
-    Ensure Supabase are configured before running the backend.
+1. Ensure Supabase are configured before running the backend.
 
-    The backend must be running for the frontend to function properly.
+2. The backend must be running for the frontend to function properly.
 
-    This project uses FastAPI for high-performance APIs and Supabase for database + file storage.
+3. This project uses FastAPI for high-performance APIs and Supabase for database + file storage.
