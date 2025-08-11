@@ -117,7 +117,7 @@ This bucket will store approved game images accessible by the frontend and bot.
 
 ### 5. Automated Environment Setup
 
-To simplify configuring the project, a setup.py script is provided to generate all necessary .env files by prompting you for required API keys and URLs.
+To simplify configuring the project, a setup.py script is provided to generate all necessary `.env` files by prompting you for required API keys and URLs.
 How to use the setup script
 
 - Ensure you have Python 3 installed.
