@@ -56,27 +56,71 @@ NTUGuessr/
 
 ## 🛠️ Setup Steps
 
-1. **Setup Supabase**
+### 1. Create Supabase Account and Setup
 
-   - Create a Supabase project.
-   - Note down your `SUPABASE_URL` and `SERVICE_KEY`.
-   - (Optional) Create `ANON_KEY` if needed for public access from the frontend/admin panel.
+- Create a Supabase project at [supabase.com](https://supabase.com).
+- Note down your project credentials:
+  - `SUPABASE_URL`
+  - `ANON_KEY`
 
-2. **Setup Backend**
+---
 
-   - See [Backend/README.md](Backend/README.md) for instructions.
+### 2. Create Required Tables
 
-3. **Setup Frontend**
+Run the following SQL commands in your Supabase SQL editor to create the necessary tables:
 
-   - See [Frontend/README.md](Frontend/README.md) for instructions.
+```sql
+CREATE TABLE public.users (
+  id UUID NOT NULL DEFAULT gen_random_uuid(),
+  username TEXT NULL,
+  password TEXT NULL,
+  clan TEXT NULL,
+  high_score NUMERIC NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT users_pkey PRIMARY KEY (id)
+) TABLESPACE pg_default;
 
-4. **Setup Telegram Bot** (optional)
+CREATE TABLE public.need_approval (
+  filename TEXT NOT NULL,
+  lat DOUBLE PRECISION NULL,
+  lng DOUBLE PRECISION NULL,
+  CONSTRAINT need_approval_pkey PRIMARY KEY (filename)
+) TABLESPACE pg_default;
 
-   - See [TeleBot/README.md](TeleBot/README.md) for instructions.
+CREATE TABLE public.locs (
+  filename TEXT NOT NULL,
+  lat DOUBLE PRECISION NULL,
+  lng DOUBLE PRECISION NULL,
+  CONSTRAINT locs_pkey PRIMARY KEY (filename)
+) TABLESPACE pg_default;
+```
 
-5. **Setup Admin Panel**
-   - See [Admin_Panel/README.md](Admin_Panel/README.md) for instructions.
-   - ⚠ **Note:** Currently no authentication is implemented — the panel interacts directly with Supabase without going through the backend. Future updates will include backend integration and admin role permissions.
+### 3. Create Public Storage Bucket
+
+Create a public storage bucket named locs in your Supabase dashboard:
+
+1. Navigate to Storage.
+
+2. Click Create new bucket.
+
+3. Enter locs as the bucket name.
+
+4. Enable Public access.
+
+5. Save the bucket.
+
+This bucket will store approved game images accessible by the frontend and bot. 4. Proceed with Component Setups
+
+### 4. After Supabase is configured, follow setup instructions for each part of the project:
+
+1.  [Backend/README.md](Backend/README.md)
+
+2.  [Frontend/README.md](Frontend/README.md)
+
+3.  [TeleBot/README.md](TeleBot/README.md)
+
+4.  [Admin_Panel/README.md](Admin_Panel/README.md)
+    - ⚠ **Note:** Currently no authentication is implemented — the panel interacts directly with Supabase without going through the backend. Future updates will include backend integration and admin role permissions.
 
 ---
 
