@@ -19,19 +19,38 @@ The system consists of:
 
 ## 🗂️ Repository Structure
 
+## Repository Structure
+
+```plaintext
 NTUGuessr/
+├── frontend/               # React + Vite main user interface
+│   ├── src/                # Frontend source code
+│   ├── public/             # Static assets
+│   ├── package.json        # Frontend dependencies
+│   ├── vite.config.js      # Vite configuration
+│   └── .env
 │
-├── Frontend/ # React + Vite main user interface
+├── backend/                # FastAPI server
+│   ├── requirements.txt    # Backend dependencies
+│   ├── main.py             # FastAPI entry point
+│   └── .env
 │
-├── Backend/ # FastAPI server
+├── telegram-bot/           # Telegram bot integration
+│   ├── bot.py              # Bot entry point
+│   ├── requirements.txt    # Bot dependencies
+│   └── .env
 │
-├── TeleBot/ # Telegram bot integration
+├── admin-panel/            # Next.js admin interface (no auth yet)
+│   ├── pages/              # Page components
+│   ├── public/             # Static assets
+│   ├── package.json        # Admin panel dependencies
+│   └── .env.local
 │
-├── Admin_panel/ # Next.js admin interface
 │
-├── .gitignore # Covers all components
-├── README.md # Root project readme
-└── LICENSE
+├── .gitignore              # Root-level ignore rules
+├── README.md               # Root project readme
+└── LICENSE                 # Project license
+```
 
 ---
 
