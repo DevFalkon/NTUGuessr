@@ -88,10 +88,10 @@ graph TD
 
 ## 🚀 Future Plans
 
-    Backend integration for the Admin Panel.
+1. Backend integration for the Admin Panel.
 
-    Role-based authentication and access control.
+2. Role-based authentication and access control.
 
-    Deployment using Docker and CI/CD pipelines.
+3. Deployment using Docker and CI/CD pipelines.
 
-    Additional game features and UI improvements.
+4. Additional game features and UI improvements.
