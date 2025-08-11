@@ -109,7 +109,46 @@ Create a public storage bucket named locs in your Supabase dashboard:
 
 This bucket will store approved game images accessible by the frontend and bot. 4. Proceed with Component Setups
 
-### 4. After Supabase is configured, follow setup instructions for each part of the project:
+### 4. Create Telegram Bot
+
+1. Create a Telegram Bot using `@BotFather`
+
+2. Note your Telegram Bot API key.
+
+### 5. Automated Environment Setup
+
+To simplify configuring the project, a setup.py script is provided to generate all necessary .env files by prompting you for required API keys and URLs.
+How to use the setup script
+
+- Ensure you have Python 3 installed.
+
+- Run the script from the project root:
+
+```bash
+python setup.py
+```
+
+Follow the interactive prompts to enter:
+
+1. Supabase project URL and keys
+
+2. Telegram Bot API keyB
+
+3. ackend URL (optional, can be manually added later)
+
+The script will create `.env` or `.env.local` files in the appropriate subdirectories:
+
+- Frontend/.env
+
+- Backend/.env
+
+- TeleBot/.env
+
+- Admin_panel/.env.local
+
+After the script completes, you can start each component as usual.
+
+### 6. Further instructions for each part of the project are located at:
 
 1.  [Backend/README.md](Backend/README.md)
 
