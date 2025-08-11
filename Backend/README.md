@@ -70,7 +70,3 @@ Add this to the frontend `.env`
     The backend must be running for the frontend to function properly.
 
     This project uses FastAPI for high-performance APIs and Supabase for database + file storage.
-
-```
-
-```
