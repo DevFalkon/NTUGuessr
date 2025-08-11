@@ -63,8 +63,6 @@ NTUGuessr/
   - `SUPABASE_URL`
   - `ANON_KEY`
 
----
-
 ### 2. Create Required Tables
 
 Run the following SQL commands in your Supabase SQL editor to create the necessary tables:
