@@ -75,7 +75,7 @@ graph TD
     end
 
     subgraph Database
-        S[Supabase (PostgreSQL + Storage)]
+        S["Supabase (PostgreSQL + Storage)"]
     end
 
     F --> B
