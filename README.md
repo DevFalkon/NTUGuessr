@@ -20,10 +20,18 @@ The system consists of:
 ## 🗂️ Repository Structure
 
 NTUGuessr/
-frontend/ # React + Vite frontend
-backend/ # FastAPI backend
-telebot/ # Telegram bot
-admin-panel/ # Next.js admin panel
+│
+├── Frontend/ # React + Vite main user interface
+│
+├── Backend/ # FastAPI server
+│
+├── TeleBot/ # Telegram bot integration
+│
+├── Admin_panel/ # Next.js admin interface
+│
+├── .gitignore # Covers all components
+├── README.md # Root project readme
+└── LICENSE
 
 ---
 
