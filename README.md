@@ -135,7 +135,7 @@ Follow the interactive prompts to enter:
 
 2. Telegram Bot API key
 
-3. ackend URL (optional, can be manually added later)
+3. Backend (FastAPI) URL (optional, can be manually added later)
 
 The script will create `.env` or `.env.local` files in the appropriate subdirectories:
 
