@@ -1,32 +1,25 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from contextlib import asynccontextmanager
-import asyncio
+import asyncio, bcrypt, os
 from session import UserSession
 from storage import get_public_url, checkUserName
 from storage import get_locs, get_final_score, get_ranking, cred_check, create_acc
 from points import calc_points
-import bcrypt
-import os
 from dotenv import load_dotenv
+
 from logs_handler import logger
+from periodic_tasks import session_logger
+from request_base import *
 
 # Session storage (can be upgraded to DB later)
+# {session_id: UserSession} key value pair to keep track of user session
 sessions = {}
 
 load_dotenv()
 
+# Loading all variables from .env
 POINTS_MULTIPLIER = float(os.getenv("POINTS_MULTIPLIER"))
-
-
-# Periodic task
-async def periodic_task():
-    while True:
-        for session in sessions.values():
-            session.printData()
-        await asyncio.sleep(5)   
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,7 +29,7 @@ async def lifespan(app: FastAPI):
     # Integrate telegram bot
 
     # create periodic task
-    task = asyncio.create_task(periodic_task())
+    task = asyncio.create_task(session_logger(sessions=sessions, interval=10))
     yield
     task.cancel()
     try:
@@ -57,10 +50,23 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Player Login Request Model
-class LoginRequest(BaseModel):
-    username: str
-    password: str
+
+# --- Endpoint to check API status ---
+
+# Can be used with services such as UptimeRobot to keep track of uptime
+@app.api_route("/ping", methods=["GET", "HEAD"])
+def ping():
+    return {"status": "alive"}
+
+
+@app.api_route("/",methods=["GET", "HEAD"] )
+def default():
+    return {"status": "alive"}
+
+# ----- END -----
+
+
+# --- Endpoints for user auth ---
 
 # User login endpoint
 @app.post("/login")
@@ -78,42 +84,6 @@ async def login(request: LoginRequest):
     
     return {'session_id': False, 'login': False}
 
-class SessionRequest(BaseModel):
-    session_id: str
-
-class GuessRequest(BaseModel):
-    session_id: str
-    lat: float
-    lng: float
-
-
-@app.post("/game_state")
-async def game_state(request: SessionRequest):
-    sessions[request.session_id].updateTime()
-    print(f"game state: {sessions[request.session_id].is_active}")
-    return {"isActive": sessions[request.session_id].is_active}
-
-
-@app.post("/new_game")
-async def new_game(request: SessionRequest):
-    app.state.image_data = get_locs()
-    sessions[request.session_id].resetToDefault()
-
-    return {"done": True}
-
-@app.post("/rest")
-async def reset(request: SessionRequest):
-    session_id = request.session_id
-    session = sessions[session_id]
-    if session_id in sessions and len(session.remaining_ind) > 0:
-        score = session.score
-        # Save the score
-
-    sessions[session_id].resetToDefault()
-
-    return {"done": True}
-
-
 # Handle user logout
 @app.post("/logout")
 async def logout(requst: SessionRequest):
@@ -128,6 +98,71 @@ async def logout(requst: SessionRequest):
 
     return {"done": True}
 
+# ----- END -----
+
+
+# --- Endpoints for user signup ---
+
+# Endpoint to check if username is unique
+@app.post("/check-username")
+async def check_username(data: UsernameRequest):
+    response = checkUserName(data.username)
+    if response.data:
+        return {"exists": True}
+    return {"exists": False}
+
+# Endpoint to create new user
+@app.post("/signup")
+async def signup(data: SignupData):
+
+    # Hash the password
+    password_hash = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    result = create_acc(data.username, password_hash, data.clan)
+    print(result)
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Database error")
+
+    return {"message": "User created successfully"}
+
+# ----- END -----
+
+
+# --- Endpoints for gameplay ---
+
+# Start new game
+@app.post("/new_game")
+async def new_game(request: SessionRequest):
+    # Update image data from the database
+    app.state.image_data = get_locs()
+
+    # reset the user session to default state
+    sessions[request.session_id].resetToDefault()
+
+    return {"done": True}
+
+# Set difficulty of the game on the backend
+# Used for POINTS_MULTIPLIER
+@app.post("/set_difficulty")
+async def set_difficulty(request: DifficultyData):
+    if request.session_id not in sessions:
+        raise HTTPException(status_code=400, detail="Invalid session")
+    
+    else:
+        logger.info(f"[DIFFICULTY]: {request.difficulty}")
+        if request.difficulty == "easy":
+            pass
+        else:
+            sessions[request.session_id].mode = 2
+    
+    return {"status": 1}
+
+# Check if a game is active for given session_id
+@app.post("/game_state")
+async def game_state(request: SessionRequest):
+    sessions[request.session_id].updateTime()
+    print(f"game state: {sessions[request.session_id].is_active}")
+    return {"isActive": sessions[request.session_id].is_active}
 
 # Hangle user guess
 @app.post("/guess")
@@ -145,7 +180,7 @@ async def guess(request: GuessRequest):
     # Calculate the distance and points
     dist, points = calc_points((request.lat, request.lng), (actual_lat, actual_lng))
 
-    # If game mode == Difficult : points *= POINTS_MULTIPLIER (1.5 default)
+    # game mode == Difficult ? points *= POINTS_MULTIPLIER (1.5 default)
     if session.mode == 2:
         points *= POINTS_MULTIPLIER
     session.score += int(points)
@@ -157,7 +192,7 @@ async def guess(request: GuessRequest):
         "dist": dist,
     }
 
-
+# Handle next iamge request
 @app.post("/next_image") 
 def next_image(requst: SessionRequest):
     # Check if user session exists
@@ -189,17 +224,34 @@ def next_image(requst: SessionRequest):
         "remTime": int(session.rem_time)
     }
 
-
+# Get the final score and set high score if required
 @app.post("/final_score")
 async def final_score(request: SessionRequest):
     session_id = request.session_id
+    # retreive current session score
     score = sessions[session_id].score
+    # get score, rank and high score from session info + db data
     score, rank, h_score = get_final_score(score, sessions[session_id].username)
     return {
         "score":score,
         "rank":rank,
         "h_score":h_score,
     }
+
+# Return the remaining game time to sync front+backend
+@app.post("/get_remaining_time")
+async def get_remaining_time(request: SessionRequest):
+    if request.session_id not in sessions:
+        raise HTTPException(status_code=400, detail="Invalid session")
+
+    sessions[request.session_id].updateTime()
+
+    return {"remTime": int(sessions[request.session_id].rem_time)}
+
+# ----- END -----
+
+
+# --- Endpoint for leaderboard ---
 
 @app.post("/leaderboard")
 def get_leaderboard():
@@ -226,73 +278,4 @@ def get_leaderboard():
         "clans": clan_rankings
     }
 
-class UsernameRequest(BaseModel):
-    username: str
-
-# Endpoint to check if username is unique
-@app.post("/check-username")
-async def check_username(data: UsernameRequest):
-    response = checkUserName(data.username)
-    if response.data:
-        return {"exists": True}
-    return {"exists": False}
-
-class SignupData(BaseModel):
-    username: str
-    password: str
-    clan: str
-
-# Endpoint to create new user
-@app.post("/signup")
-async def signup(data: SignupData):
-
-    # Hash the password
-    password_hash = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-    result = create_acc(data.username, password_hash, data.clan)
-    print(result)
-    if not result.data:
-        raise HTTPException(status_code=500, detail="Database error")
-
-    return {"message": "User created successfully"}
-    
-
-@app.post("/get_remaining_time")
-async def get_remaining_time(request: SessionRequest):
-    if request.session_id not in sessions:
-        raise HTTPException(status_code=400, detail="Invalid session")
-
-    sessions[request.session_id].updateTime()
-
-    return {"remTime": int(sessions[request.session_id].rem_time)}
-
-# Endpoint to check API status
-# Can be used with services such as UptimeRobot to keep track of uptime
-@app.api_route("/ping", methods=["GET", "HEAD"])
-def ping():
-    return {"status": "alive"}
-
-
-@app.api_route("/",methods=["GET", "HEAD"] )
-def default():
-    return {"status": "alive"}
-
-
-class SignupData(BaseModel):
-    session_id: str
-    difficulty: str
-
-@app.post("/set_difficulty")
-async def set_difficulty(request: SignupData):
-    if request.session_id not in sessions:
-        raise HTTPException(status_code=400, detail="Invalid session")
-    
-    else:
-        logger.info(f"[DIFFICULTY]: {request.difficulty}")
-        if request.difficulty == "easy":
-            pass
-        else:
-            sessions[request.session_id].mode = 2
-    
-    return {"status": 1}
-        
+ # ----- END -----
