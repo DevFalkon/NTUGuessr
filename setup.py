@@ -10,6 +10,9 @@ def main():
     supabase_service_key = input("Enter Supabase Service Key: ").strip()
     telegram_bot_api = input("Enter Telegram Bot API Key: ").strip()
 
+    insta_acc_name = input("Enter Instagram account display taxt: ").strip()
+    insta_acc_url = input("Enter isntagram account URL: https://www.instagram.com/").strip()
+
     # Frontend .env
     backend_ready = False
     while not backend_ready:
@@ -23,7 +26,9 @@ def main():
             print("Please enter 'y' or 'n' only.")
     
     frontend_env = {
-        "VITE_BACKEND_URL": "Enter_Backend_URL"
+        "VITE_BACKEND_URL": "Enter_Backend_URL",
+        "VITE_INSTA_URL":insta_acc_url,
+        "VITE_INSTA_TEXT":insta_acc_name,
     }
 
     if backend_ready:
@@ -50,7 +55,7 @@ def main():
     }
     write_env_file("Admin_panel/.env.local", admin_env)
 
-    print("\n.env files created successfully!")
+    print("\nAll .env files created successfully!")
 
 if __name__ == "__main__":
     main()
