@@ -85,7 +85,7 @@ function Leaderboard() {
             : (clanColors[entry.clan] || grey[100]);
 
           return (
-            <TableRow key={idx} sx={{ bgcolor: isTop3 ? medalColors[idx] : bgColor }}>
+            <TableRow key={idx} sx={{ bgcolor: isTop3 ? medalColors[idx] : bgColor}}>
               <TableCell>{idx + 1}</TableCell>
               {isClan ? (
                 <>
@@ -107,12 +107,35 @@ function Leaderboard() {
   );
 
   return (
-    <Box sx={{ maxWidth: 700, mx: 'auto', mt: 5, px: 2 }}>
+    <Box sx={{ maxWidth: 700, mx: 'auto', mt: 5, px: 2}}>
       <Typography variant="h4" align="center" gutterBottom>
         Leaderboard
       </Typography>
 
-      <Paper sx={{ mt: 2, p: 2 }}>
+      <Paper sx={{
+          mt: 2,
+          p: 2,
+          maxHeight: '70vh',   // or any height you want
+          overflowY: 'auto',   // makes Paper scrollable
+          // Scrollbar styling
+          '&::-webkit-scrollbar': {
+            width: '4px',
+            height: '80%'
+          },
+          '&::-webkit-scrollbar-track': {
+            background: '#2c2c34', // background of the track
+            borderRadius: '4px',
+            marginTop: '10px',
+            marginBottom: '10px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: '#5c6370', // thumb color
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            backgroundColor: '#7f848e', // hover effect
+          },
+        }}>
         <Tabs value={tab} onChange={(e, v) => setTab(v)} centered>
           <Tab label="Individual" />
           <Tab label="Clan" />

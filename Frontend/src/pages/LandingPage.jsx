@@ -7,7 +7,7 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import { EmojiEvents } from '@mui/icons-material';
+import { Co2Sharp, EmojiEvents } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../components/GameHandler';
 
@@ -60,11 +60,37 @@ const LandingPage = () => {
     checkGameState();
   }, []);
 
+  const sendDifficulty = async (difficulty) => {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/set_difficulty`,{
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id, difficulty }),
+        });
+
+      if (!resp.ok) {
+        console.log("Could not set difficulty on backend!");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.state){
+        console.log("Difficulty on backend!");
+      }
+    }
+
+    catch(err){
+      console.log(err);
+    }
+  };
+
 
   const handleSelectDifficulty = async (difficulty) => {
     if (!hasInitialized){
       await new_game();
     }
+    sendDifficulty(difficulty);
     localStorage.setItem('difficulty', difficulty);
     navigate(`/startgame/${difficulty}`);
   };

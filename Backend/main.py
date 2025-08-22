@@ -10,6 +10,7 @@ from points import calc_points
 import bcrypt
 import os
 from dotenv import load_dotenv
+from logs_handler import logger
 
 # Session storage (can be upgraded to DB later)
 sessions = {}
@@ -19,7 +20,7 @@ load_dotenv()
 POINTS_MULTIPLIER = float(os.getenv("POINTS_MULTIPLIER"))
 
 
-# Define your periodic task
+# Periodic task
 async def periodic_task():
     while True:
         for session in sessions.values():
@@ -29,8 +30,12 @@ async def periodic_task():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Loading images and coordinates...")
+    print("Loading images and coordinates from database")
     app.state.image_data = get_locs()
+
+    # Integrate telegram bot
+
+    # create periodic task
     task = asyncio.create_task(periodic_task())
     yield
     task.cancel()
@@ -40,7 +45,8 @@ async def lifespan(app: FastAPI):
         print("Background task cancelled")
     print("Shutting down...")
 
-app = FastAPI(lifespan=lifespan)
+# Inititialise FastAPI app
+app = FastAPI(lifespan=lifespan,title="NTUGuessr")
 
 # Allow frontend CORS
 app.add_middleware(
@@ -51,20 +57,22 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Player Login Model
+# Player Login Request Model
 class LoginRequest(BaseModel):
     username: str
     password: str
 
-
+# User login endpoint
 @app.post("/login")
 async def login(request: LoginRequest):
-    print(request.username, request.password)
+    # Logs
+    logger.info(f"[USER LOGIN]: {request.username} | {request.password}")
 
     session_id = cred_check(request.username, request.password)
 
-    if cred_check(request.username, request.password):
-        #session_id = str(uuid.uuid4())
+    if session_id:
+        # if cred_check returns !None, create new user session
+        # This needs to be changed to use JWT tokens
         sessions[session_id] = UserSession(session_id, request.username)
         return {"session_id": session_id, 'login': True}
     
@@ -106,11 +114,14 @@ async def reset(request: SessionRequest):
     return {"done": True}
 
 
-
+# Handle user logout
 @app.post("/logout")
 async def logout(requst: SessionRequest):
     try:
-        # Save current game state
+        # Save current game state -> Need to implement
+
+        # Delte user session info from memory
+        # Needs to be changed
         sessions.pop(requst.session_id)
     except KeyError:
         print("Logged out")
@@ -118,21 +129,26 @@ async def logout(requst: SessionRequest):
     return {"done": True}
 
 
+# Hangle user guess
 @app.post("/guess")
 async def guess(request: GuessRequest):
+    # Get user session info -> Needs to be integrated with db later
     session = sessions[request.session_id]
-    print(request.session_id, request.lat, request.lng)
-    actual_lat, actual_lng = app.state.image_data[session.cur_img]
 
+    # Get the actual latitude and longitude info from the database
+    actual_lat, actual_lng = app.state.image_data[session.cur_img]
+    
+    # Set current image to None
+    # /next_image only updates if cur_img == None
     session.cur_img = None
 
+    # Calculate the distance and points
     dist, points = calc_points((request.lat, request.lng), (actual_lat, actual_lng))
 
+    # If game mode == Difficult : points *= POINTS_MULTIPLIER (1.5 default)
     if session.mode == 2:
         points *= POINTS_MULTIPLIER
-    session.score += points
-
-    print(f"User scored {points} points!")
+    session.score += int(points)
 
     return {
         "lat": actual_lat,
@@ -144,16 +160,24 @@ async def guess(request: GuessRequest):
 
 @app.post("/next_image") 
 def next_image(requst: SessionRequest):
+    # Check if user session exists
     session_id = requst.session_id
     if session_id not in sessions:
         raise HTTPException(status_code=401, detail="Invalid session ID")
 
     session = sessions[session_id]
-    session.updateTime()           
+
+    # Update remainig time on the backend
+    session.updateTime()    
+
+    # Only update the image after user has guessed/ this is the first image
+    # Prevents triggering incase of page reload       
     if session.cur_img == None:
+        # Check if there are any new images
         if len(session.remaining_ind) > 0:
             session.cur_img = session.remaining_ind.pop()
         else:
+            # End game if user has gone through all images
             return {
                 "url":None,
                 "remTime":0
@@ -165,14 +189,12 @@ def next_image(requst: SessionRequest):
         "remTime": int(session.rem_time)
     }
 
-def get_score(session_id):
-    score = sessions[session_id].score
-    return get_final_score(score, sessions[session_id].username)
-
 
 @app.post("/final_score")
 async def final_score(request: SessionRequest):
-    score, rank, h_score = get_score(request.session_id)
+    session_id = request.session_id
+    score = sessions[session_id].score
+    score, rank, h_score = get_final_score(score, sessions[session_id].username)
     return {
         "score":score,
         "rank":rank,
@@ -183,7 +205,8 @@ async def final_score(request: SessionRequest):
 def get_leaderboard():
     player_data = get_ranking()
 
-    # Aggregate scores by clan
+    # Aggregate scores by clan -> need to change to json config
+    # JSON config to be used to select group while signing up
     clan_scores = {}
     for player in player_data:
         clan = player["clan"]
@@ -206,6 +229,7 @@ def get_leaderboard():
 class UsernameRequest(BaseModel):
     username: str
 
+# Endpoint to check if username is unique
 @app.post("/check-username")
 async def check_username(data: UsernameRequest):
     response = checkUserName(data.username)
@@ -218,6 +242,7 @@ class SignupData(BaseModel):
     password: str
     clan: str
 
+# Endpoint to create new user
 @app.post("/signup")
 async def signup(data: SignupData):
 
@@ -241,8 +266,15 @@ async def get_remaining_time(request: SessionRequest):
 
     return {"remTime": int(sessions[request.session_id].rem_time)}
 
+# Endpoint to check API status
+# Can be used with services such as UptimeRobot to keep track of uptime
 @app.api_route("/ping", methods=["GET", "HEAD"])
 def ping():
+    return {"status": "alive"}
+
+
+@app.api_route("/",methods=["GET", "HEAD"] )
+def default():
     return {"status": "alive"}
 
 
@@ -256,6 +288,7 @@ async def set_difficulty(request: SignupData):
         raise HTTPException(status_code=400, detail="Invalid session")
     
     else:
+        logger.info(f"[DIFFICULTY]: {request.difficulty}")
         if request.difficulty == "easy":
             pass
         else:
