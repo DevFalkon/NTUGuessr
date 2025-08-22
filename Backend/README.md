@@ -23,6 +23,7 @@ Key features include:
 ```bash
 SUPABASE_URL=your_supabase_database_url
 SERVICE_KEY=your_supabase_service_key
+BOT_TOKEN=your_telegram_bot_token
 MAX_TIME=300
 POINTS_MULTIPLIER=1.5
 ```

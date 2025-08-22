@@ -7,7 +7,7 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import { Co2Sharp, EmojiEvents } from '@mui/icons-material';
+import { EmojiEvents } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../components/GameHandler';
 

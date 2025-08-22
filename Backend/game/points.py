@@ -1,5 +1,4 @@
-from math import radians, sin, cos, sqrt, atan2
-import math
+from math import radians, sin, cos, sqrt, atan2, exp
 
 def haversine(lat1, lng1, lat2, lng2):
     R = 6371  # Earth radius in kilometers
@@ -15,7 +14,7 @@ def haversine(lat1, lng1, lat2, lng2):
 def distance_to_points(distance_km):
   max_points = 1000
   decay_rate = 6  # higher = sharper drop
-  points = int(max_points * math.exp(-decay_rate * distance_km))
+  points = int(max_points * exp(-decay_rate * distance_km))
   return points
 
 

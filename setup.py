@@ -37,18 +37,11 @@ def main():
     backend_env = {
         "SUPABASE_URL": supabase_url,
         "SERVICE_KEY": supabase_service_key,
+        "BOT_API": telegram_bot_api,
         "MAX_TIME": 300,
         "POINTS_MULTIPLIER": 1.5,
     }
     write_env_file("Backend/.env", backend_env)
-
-    # Telegram bot .env
-    telebot_env = {
-        "BOT_API": telegram_bot_api,
-        "SUPABASE_URL": supabase_url,
-        "SERVICE_KEY": supabase_service_key,
-    }
-    write_env_file("TeleBot/.env", telebot_env)
 
     # Admin panel .env.local
     admin_env = {

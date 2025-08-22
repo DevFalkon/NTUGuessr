@@ -1,16 +1,16 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-import asyncio, bcrypt, os
-from session import UserSession
-from storage import get_public_url, checkUserName
-from storage import get_locs, get_final_score, get_ranking, cred_check, create_acc
-from points import calc_points
 from dotenv import load_dotenv
+import asyncio, bcrypt, os
 
-from logs_handler import logger
-from periodic_tasks import session_logger
-from request_base import *
+from components.logs_handler import logger
+from components.periodic_tasks import session_logger
+from game.session import UserSession
+from game.points import calc_points
+from components.request_base import *
+from components.supabase_handler import *
+from components.tele_bot import start_telegram_bot
 
 # Session storage (can be upgraded to DB later)
 # {session_id: UserSession} key value pair to keep track of user session
@@ -20,23 +20,34 @@ load_dotenv()
 
 # Loading all variables from .env
 POINTS_MULTIPLIER = float(os.getenv("POINTS_MULTIPLIER"))
+BOT_TOKEN = os.getenv("BOT_API")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Loading images and coordinates from database")
     app.state.image_data = get_locs()
 
-    # Integrate telegram bot
+
+    bot_app = await start_telegram_bot(BOT_TOKEN)
+    logger.info(f"[TELE BOT]: Telegram bot is running")
 
     # create periodic task
     task = asyncio.create_task(session_logger(sessions=sessions, interval=10))
+
     yield
     task.cancel()
+
     try:
         await task
     except asyncio.CancelledError:
         print("Background task cancelled")
-    print("Shutting down...")
+    
+    # Stop the telegram bot properly
+    await bot_app.updater.stop_polling()
+    await bot_app.stop()
+    await bot_app.shutdown()
+
+    logger.info("Backend and telegram bot shutdown successfully!")
 
 # Inititialise FastAPI app
 app = FastAPI(lifespan=lifespan,title="NTUGuessr")

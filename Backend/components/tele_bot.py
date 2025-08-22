@@ -1,19 +1,11 @@
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
-from dotenv import load_dotenv
-import os
 from PIL import Image
-from supabase_handler import get_locs, upload_locs, upload_image
-import random
+import random, os
 
+from components.supabase_handler import get_all_locs, upload_locs, upload_image
 
-# Load the .env file
-load_dotenv()
-
-# Access the variables
-bot_token = os.getenv("BOT_API")
-
-PHOTO_DIR = "./need_approval"
+PHOTO_DIR = "./temp"
 os.makedirs(PHOTO_DIR, exist_ok=True)
 
 tracker_dict = {}
@@ -36,7 +28,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = user.id
 
     # Define a unique filename
-    cur_names = get_locs()
+    cur_names = get_all_locs()
     print(cur_names)
     name = None
     while not name:
@@ -84,14 +76,14 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("📍 Got your location!\n🖼️ Your image is being reviewed 👀")
 
 # Run the bot
-def run_bot():
+async def start_telegram_bot(bot_token: str):
     app = ApplicationBuilder().token(bot_token).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(MessageHandler(filters.LOCATION, handle_location))
 
-    print("Telegram bot is running...")
-    app.run_polling()
-
-run_bot()
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    return app

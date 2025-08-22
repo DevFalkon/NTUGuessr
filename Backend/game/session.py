@@ -1,6 +1,6 @@
 import time
 import random
-from storage import get_locs
+from components.supabase_handler import get_locs
 import os
 from dotenv import load_dotenv
 

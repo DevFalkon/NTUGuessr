@@ -1,6 +1,9 @@
 import { Box, Typography } from '@mui/material';
 import InstagramIcon from '@mui/icons-material/Instagram';
 
+const INSTA_URL = import.meta.env.VITE_INSTA_URL;
+const INSTA_TEXT = import.meta.env.VITE_INSTA_TEXT;
+
 const Footer = () => {
   return (
     <Box
@@ -13,7 +16,7 @@ const Footer = () => {
     >
       <Box
         component="a"
-        href="https://www.instagram.com/enitio_ntu/"
+        href={INSTA_URL}
         target="_blank"
         rel="noopener noreferrer"
         sx={{
@@ -27,7 +30,7 @@ const Footer = () => {
       >
         <InstagramIcon fontSize="small" color="secondary" />
         <Typography variant="body2" color="text.secondary">
-          ENITIO-2025
+          {INSTA_TEXT}
         </Typography>
       </Box>
     </Box>
