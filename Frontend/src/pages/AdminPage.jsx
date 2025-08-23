@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { supabase, getPublicUrl } from '@/lib/supabase';
-import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
   CircularProgress,
   Button,
 } from '@mui/material';
+import MapPopup from '../components/AdminMap';
 
-const MapPopup = dynamic(() => import('@/components/MapPopup'), { ssr: false });
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-export default function Home() {
+const AdminPage = () => {
   const [items, setItems] = useState([]);
+  const [urls, setUrls] = useState({});
   const [selectedFilename, setSelectedFilename] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -21,82 +21,148 @@ export default function Home() {
 
   // API calls
 
+  const get_awaited = async () => {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/awaiting_approval`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          cedentials: 'include'
+      });
+
+      const data = await resp.json();
+      
+      if (resp.ok){
+        setItems(data.files);
+        return data.files;
+      }
+    }
+    
+    catch (err) {
+      if (err.name === 'TypeError') {
+          throw new Error('Unable to connect to server');
+      } else {
+          throw err;
+      }
+    }
+  };
+
+  const getPublicUrl = async (file_name) => {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/awaiting_approval_url`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_name }),
+      });
+
+      const data = await resp.json();
+
+      if (resp.ok){
+        return data.url;
+      }
+    }
+    
+    catch (err) {
+      if (err.name === 'TypeError') {
+          throw new Error('Unable to connect to server');
+      } else {
+          throw err;
+      }
+    }
+  };
+
+  useEffect(() => {
+    const fetchAwaitedUrls = async () => {
+      try {
+        const all_data = await get_awaited(); // your backend returns the array of items
+        const newUrls = {};
+
+        for (const item of all_data) {
+          newUrls[item.filename] = await getPublicUrl(item.filename);
+        }
+        setSelectedFilename(all_data[0]?.filename || null);
+        setUrls(newUrls); // store all URLs in state
+      } catch (err) {
+        console.error('Failed to fetch awaited URLs', err);
+      }
+    };
+    setLoading(false);
+    fetchAwaitedUrls();
+  }, []);
+
+  const selectedItem = items.find((item) => item.filename === selectedFilename);
+  
+
+
   // 1. Handle image approval
   async function approveHandler(item) {
     const { filename, lat, lng } = item;
 
-    // 1. Insert into `images` table
-    const { error: insertError } = await supabase
-      .from('locs') // your approved table
-      .insert([{ filename, lat, lng }]);
+    const update_db = async (filename, lat, lng) => {
+      try {
+        const resp = await fetch(`${BACKEND_URL}/approve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename, lat, lng }),
+        });
 
-    if (insertError) {
-      console.error('Error inserting into images:', insertError.message);
-      return;
-    }
+        if (resp.ok){
+          console.log("updated database");
+        }
+      }
+      
+      catch (err) {
+        if (err.name === 'TypeError') {
+            throw new Error('Unable to connect to server');
+        } else {
+            throw err;
+        }
+      }
+    };
 
-    // 2. Copy image to `images` bucket
-    const { error: copyError } = await supabase.storage
-      .from('locs')
-      .move(`not_approved/${filename}.jpg`, `image/${filename}.jpg`); // target is `images` bucket
-
-    if (copyError) {
-      console.error('Error moving image to approved directory:', copyError.message);
-      return;
-    }
-
-    // 3. Delete from `need_approval` table
-    const { error: deleteApprovalError } = await supabase
-      .from('need_approval')
-      .delete()
-      .eq('filename', filename);
-
-    if (deleteApprovalError) {
-      console.error('Error deleting from need_approval:', deleteApprovalError.message);
-      return;
-    }
+    await update_db(filename, lat, lng);
 
     // Update UI
-    setItems((prev) => prev.filter((i) => i.filename !== filename));
-    setSelectedFilename(null);
+    setItems((prev) => {
+      const updated = prev.filter((i) => i.filename !== filename);
+      setSelectedFilename(updated[0]?.filename || null);
+      return updated;
+    });
   }
 
   // 2. Handle rejected images
   async function rejectHandler(item) {
     const { filename, lat, lng } = item;
 
-    const { error: deleteError } = await supabase
-      .from('need_approval')
-      .delete()
-      .eq('filename', filename);
-    if (deleteError) return console.error('Delete error:', deleteError.message);
+    const update_db = async (filename) => {
+      try {
+        const resp = await fetch(`${BACKEND_URL}/reject`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename }),
+        });
 
-    const { error: storageError } = await supabase.storage
-      .from('not_approved')
-      .remove([filename]);
-    if (storageError) return console.error('Storage delete error:', storageError.message);
-    setItems((prev) => prev.filter((i) => i.filename !== filename));
-    setSelectedFilename(null);
-  }
-
-
-
-  useEffect(() => {
-    async function fetchData() {
-      const { data, error } = await supabase.from('need_approval').select('*');
-      if (error) {
-        console.error(error);
-        setLoading(false);
-        return;
+        if (resp.ok){
+          console.log("updated database");
+        }
       }
-      setItems(data);
-      setSelectedFilename(data[0]?.filename || null);
-      setLoading(false);
-    }
-    fetchData();
-  }, []);
+      
+      catch (err) {
+        if (err.name === 'TypeError') {
+            throw new Error('Unable to connect to server');
+        } else {
+            throw err;
+        }
+      }
+    };
 
-  const selectedItem = items.find((item) => item.filename === selectedFilename);
+    await update_db(filename);
+
+    setItems((prev) => {
+      const updated = prev.filter((i) => i.filename !== filename);
+      setSelectedFilename(updated[0]?.filename || null);
+      return updated;
+    });
+  }
 
   // Reset edited position and editing mode when selected item changes
   useEffect(() => {
@@ -131,6 +197,8 @@ export default function Home() {
     setIsEditing(false);
   };
 
+
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
@@ -140,7 +208,7 @@ export default function Home() {
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
+    <Box sx={{ display: 'flex', height: '100%' }}>
       {/* Left Panel: List */}
       <Box sx={{ width: '33%', height: '100%', p: 2, display: 'flex', flexDirection: 'column' }}>
         <Typography variant="h5" gutterBottom>
@@ -204,7 +272,7 @@ export default function Home() {
 
               <Box
                 component="img"
-                src={getPublicUrl(item.filename)}
+                src={urls[item.filename]}
                 alt={item.filename}
                 sx={{
                   width: 80,
@@ -245,7 +313,7 @@ export default function Home() {
             >
               <Box
                 component="img"
-                src={getPublicUrl(selectedItem.filename)}
+                src={urls[selectedItem.filename]}
                 alt={selectedItem.filename}
                 sx={{ width: '100%', borderRadius: 1, mb: 1 }}
               />
@@ -282,4 +350,6 @@ export default function Home() {
       </Box>
     </Box>
   );
-}
+};
+
+export default AdminPage;

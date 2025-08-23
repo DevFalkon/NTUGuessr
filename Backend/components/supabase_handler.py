@@ -40,9 +40,14 @@ def cred_check(username, password):
     else:
         return None
 
+def get_user_group(username):
+  res = supabase_ser.table("users").select("group").eq("username", username).execute().data
+  print(f"{username}: {res[0]}")
+  return res[0]
 
 def get_ranking():
-  rankings = supabase_ser.table("users").select("username", "clan", "high_score").order("high_score", desc=True).execute()
+  # users in the 'admin' group can't play the game
+  rankings = supabase_ser.table("users").select("username", "clan", "high_score").neq("group", "admin").order("high_score", desc=True).execute()
   return rankings.data
 
 
@@ -114,6 +119,60 @@ def upload_locs(name, lat, lng):
   return result
 
 # ----- END -----
+
+
+# --- Admin functions ---
+def need_approval():
+  result = supabase_ser.table("need_approval").select().execute()
+  return result.data
+
+def not_approved_url(file_name):
+  res = supabase_ser.storage.from_("locs").get_public_url(f"not_approved/{file_name}.jpg")
+  return res
+
+def approve_image(file_name, lat, lng):
+  # Create a new row in locs table
+  try:
+    resp = supabase_ser.table("locs").insert([
+            {"filename": file_name, "lat": lat, "lng": lng}
+          ]).execute()
+    print(resp)
+  except Exception as e:
+    print(f"Exception while updating database: {e}")
+    return
+
+  # Move image from ./not_approved to ./image
+  try:
+    supabase_ser.storage.from_("locs").move(f"not_approved/{file_name}.jpg", f"image/{file_name}.jpg")
+  except Exception as e:
+    print(f"Exception while moving image: {e}")
+    return
+  
+  # Delete record from need_approval table
+  try:
+    supabase_ser.table("need_approval").delete().eq('filename', file_name);
+  except Exception as e:
+    print(f"Exception while deleting row: {e}")
+    return
+  
+  return True
+
+def reject_image(file_name):
+  try:
+    resp = supabase_ser.table("need_approval").delete().eq("filename", file_name).execute()
+  except Exception as e:
+    print(f"Exception while deleting row: {e}")
+
+  try:
+    resp = supabase_ser.storage.from_("locs").remove([f"not_approved/{file_name}.jpg",])
+  except Exception as e:
+    print(f"Exception while deleting image: {e}")
+    return
+
+  return True
+
+# ----- END -----
+
 
 # DO NOT USE
 # DEPRICIATED -> Does not update locations

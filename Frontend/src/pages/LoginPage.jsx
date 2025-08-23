@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -18,16 +18,20 @@ const LoginPage = () => {
 
   const [Unameerror, setUnameError] = useState('');
   const [Passerror, setPassError] = useState('');
-  const [error, setError] = useState('');
 
   const navigate = useNavigate();
-  const {isLoggedIn, login} = useAuth();
+  const {isLoggedIn, login, userGroup} = useAuth();
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate('/');
+      if (userGroup === "admin"){
+        navigate('/admin');
+      }
+      else{
+        navigate('/');
+      }
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, userGroup]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

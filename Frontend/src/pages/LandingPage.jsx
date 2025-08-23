@@ -25,7 +25,6 @@ const LandingPage = () => {
   const session_id = localStorage.getItem('session_id');
   const [hasInitialized, setInitialized] = useState(false);
 
-
   useEffect(() => {
     const checkGameState = async () => {
       try {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
   Tabs,
@@ -12,23 +12,20 @@ import {
   TextField,
   Paper,
 } from '@mui/material';
-import { amber, grey } from '@mui/material/colors';
+import { grey } from '@mui/material/colors';
+import groupConfig from '../config/groupConfig.json';
 
-const clanColors = {
-  Dynari: '#e00b2b',
-  Akrona: '#0b7de0',
-  Invicta: '#e0c00b',
-  Solaris: '#812196',
-  Ephilia: '#2fe00b',
-};
+// Map clan value -> color
+const groupColorsMap = Object.fromEntries(
+  groupConfig.groups.map(clan => [clan.name, clan.color])
+);
 
-const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Leaderboard() {
   const [tab, setTab] = useState(0);
   const [players, setPlayers] = useState([]);
-  const [clanRankings, setClanRankings] = useState([]);
+  const [groupRankings, setGroupRankings] = useState([]);
   const [searchUser, setSearchUser] = useState('');
   const [filteredPlayers, setFilteredPlayers] = useState([]);
 
@@ -42,7 +39,7 @@ function Leaderboard() {
         setPlayers(data.players);
         setFilteredPlayers(data.players);
 
-        setClanRankings(data.clans);
+        setGroupRankings(data.clans);
       })
       .catch(err => console.error('Failed to fetch leaderboard:', err));
   }, []);
@@ -65,13 +62,13 @@ function Leaderboard() {
           <TableCell><b>Rank</b></TableCell>
           {isClan ? (
             <>
-              <TableCell><b>Clan</b></TableCell>
+              <TableCell><b>Group</b></TableCell>
               <TableCell><b>Total Score</b></TableCell>
             </>
           ) : (
             <>
               <TableCell><b>Username</b></TableCell>
-              <TableCell><b>Clan</b></TableCell>
+              <TableCell><b>Group</b></TableCell>
               <TableCell><b>High Score</b></TableCell>
             </>
           )}
@@ -79,21 +76,22 @@ function Leaderboard() {
       </TableHead>
       <TableBody>
         {data.map((entry, idx) => {
-          const isTop3 = idx < 3;
-          const bgColor = isClan
-            ? (isTop3 ? medalColors[idx] : clanColors[entry.clan])
-            : (clanColors[entry.clan] || grey[100]);
+          const isTop3 = isClan ? idx < 3 : entry.rank <= 3;
+          const bgColor = isTop3 
+            ? (isClan ? groupConfig.medalColors[idx] : groupConfig.medalColors[entry.rank-1])
+            : (groupColorsMap[entry.clan] || grey[100]);
 
           return (
-            <TableRow key={idx} sx={{ bgcolor: isTop3 ? medalColors[idx] : bgColor}}>
-              <TableCell>{idx + 1}</TableCell>
+            <TableRow key={idx} sx={{ bgcolor: bgColor}}>
               {isClan ? (
                 <>
+                  <TableCell>{idx + 1}</TableCell>
                   <TableCell>{entry.clan}</TableCell>
                   <TableCell>{entry.score}</TableCell>
                 </>
               ) : (
                 <>
+                  <TableCell>{entry.rank}</TableCell>
                   <TableCell>{entry.username}</TableCell>
                   <TableCell>{entry.clan}</TableCell>
                   <TableCell>{entry.high_score}</TableCell>
@@ -138,7 +136,7 @@ function Leaderboard() {
         }}>
         <Tabs value={tab} onChange={(e, v) => setTab(v)} centered>
           <Tab label="Individual" />
-          <Tab label="Clan" />
+          <Tab label="Groups" />
         </Tabs>
 
         {tab === 0 && (
@@ -158,7 +156,7 @@ function Leaderboard() {
 
         {tab === 1 && (
           <Box mt={3}>
-            {renderTable(clanRankings, true)}
+            {renderTable(groupRankings, true)}
           </Box>
         )}
       </Paper>

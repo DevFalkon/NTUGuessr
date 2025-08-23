@@ -69,28 +69,29 @@ NTUGuessr/
 Run the following SQL commands in your Supabase SQL editor to create the necessary tables:
 
 ```sql
-CREATE TABLE public.users (
-  id UUID NOT NULL DEFAULT gen_random_uuid(),
-  username TEXT NULL,
-  password TEXT NULL,
-  clan TEXT NULL,
-  high_score NUMERIC NULL DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT users_pkey PRIMARY KEY (id)
+create table public.users (
+  id uuid not null default gen_random_uuid (),
+  username text null,
+  password text null,
+  clan text null,
+  high_score numeric null default '0'::numeric,
+  created_at timestamp with time zone not null default now(),
+  "group" text null default 'player'::text,
+  constraint users_pkey primary key (id)
 ) TABLESPACE pg_default;
 
-CREATE TABLE public.need_approval (
-  filename TEXT NOT NULL,
-  lat DOUBLE PRECISION NULL,
-  lng DOUBLE PRECISION NULL,
-  CONSTRAINT need_approval_pkey PRIMARY KEY (filename)
+create table public.need_approval (
+  filename text not null,
+  lat double precision null,
+  lng double precision null,
+  constraint need_approval_pkey primary key (filename)
 ) TABLESPACE pg_default;
 
-CREATE TABLE public.locs (
-  filename TEXT NOT NULL,
-  lat DOUBLE PRECISION NULL,
-  lng DOUBLE PRECISION NULL,
-  CONSTRAINT locs_pkey PRIMARY KEY (filename)
+create table public.locs (
+  filename text not null,
+  lat double precision null,
+  lng double precision null,
+  constraint locs_pkey primary key (filename)
 ) TABLESPACE pg_default;
 ```
 
@@ -144,8 +145,6 @@ The script will create `.env` or `.env.local` files in the appropriate subdirect
 
 - Backend/.env
 
-- TeleBot/.env
-
 - Admin_panel/.env.local
 
 After the script completes, you can start each component as usual.
@@ -156,9 +155,7 @@ After the script completes, you can start each component as usual.
 
 2.  [Frontend/README.md](Frontend/README.md)
 
-3.  [TeleBot/README.md](TeleBot/README.md)
-
-4.  [Admin_panel/README.md](Admin_panel/README.md)
+3.  [Admin_panel/README.md](Admin_panel/README.md)
     - ⚠ **Note:** Currently no authentication is implemented — the panel interacts directly with Supabase without going through the backend. Future updates will include backend integration and admin role permissions.
 
 ---
@@ -173,12 +170,12 @@ graph TD
         F[React + Vite App]
     end
 
-    subgraph Backend
-        B[FastAPI API Server]
-    end
-
     subgraph Bot
         T[Telegram Bot]
+    end
+
+    subgraph Backend
+        B[FastAPI API Server]
     end
 
     subgraph Admin
@@ -190,8 +187,8 @@ graph TD
     end
 
     F --> B
+    T --> B
     B --> S
-    T --> S
     A --> S
 ```
 

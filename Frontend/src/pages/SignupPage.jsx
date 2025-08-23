@@ -9,16 +9,9 @@ import {
   Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import groupConfig from '../config/groupConfig.json';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
-const clans = [
-  { value: 'Dynari', label: 'Dynari', color: '#8e0000' },
-  { value: 'Akrona', label: 'Akrona', color: '#004c99' },
-  { value: 'Invicta', label: 'Invicta', color: '#b38f00' },
-  { value: 'Solaris', label: 'Solaris', color: '#7b1fa2' },
-  { value: 'Ephilia', label: 'Ephilia', color: '#1b5e20' },
-];
 
 export default function SignupForm() {
   const [username, setUsername] = useState('');
@@ -129,7 +122,7 @@ export default function SignupForm() {
           />
 
           <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-            Select Your Clan
+            Select Your Group
           </Typography>
 
           <ToggleButtonGroup
@@ -145,17 +138,17 @@ export default function SignupForm() {
               flexWrap: 'wrap',
             }}
           >
-            {clans.map((option) => (
+            {groupConfig.groups.map((option) => (
               <ToggleButton
-                key={option.value}
-                value={option.value}
+                key={option.name}
+                value={option.name}
                 sx={{
                   flex: 1,
-                  minWidth: '80px',
+                  minWidth: '10px',
                   borderRadius: 2,
                   color: '#fff',
                   backgroundColor:
-                    clan === option.value ? option.color : '#2c2c2c',
+                    clan === option.name ? option.color : '#2c2c2c',
                   border: '1px solid #444',
                   textTransform: 'none',
                   '&:hover': {
@@ -168,7 +161,7 @@ export default function SignupForm() {
                   },
                 }}
               >
-                {option.label}
+                {option.name}
               </ToggleButton>
             ))}
           </ToggleButtonGroup>

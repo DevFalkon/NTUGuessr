@@ -47,6 +47,7 @@ export default function MapPopup({
     <MapContainer
       center={[1.3483, 103.6831]} // fixed center, no change
       zoom={15}
+      minZoom={15}
       zoomControl={false}
       style={{ height: '100%', width: '100%' }}
     >

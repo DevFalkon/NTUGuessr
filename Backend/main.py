@@ -95,6 +95,11 @@ async def login(request: LoginRequest):
     
     return {'session_id': False, 'login': False}
 
+# Get user group
+@app.post("/user_group")
+async def user_group(request: UsernameRequest):
+    return get_user_group(request.username)
+
 # Handle user logout
 @app.post("/logout")
 async def logout(requst: SessionRequest):
@@ -271,7 +276,8 @@ def get_leaderboard():
     # Aggregate scores by clan -> need to change to json config
     # JSON config to be used to select group while signing up
     clan_scores = {}
-    for player in player_data:
+    for ind, player in enumerate(player_data):
+        player_data[ind]["rank"] = ind+1
         clan = player["clan"]
         score = player["high_score"]
         if clan:
@@ -288,5 +294,34 @@ def get_leaderboard():
         "players": player_data,
         "clans": clan_rankings
     }
+
+ # ----- END -----
+
+
+ # --- Endpoints for admin page ---
+@app.post("/awaiting_approval")
+def awaiting_approval():
+    data_arr = need_approval()
+    print(data_arr)
+    return {"files":data_arr}
+
+@app.post("/awaiting_approval_url")
+def awaiting_approval_url(request: FileURLRequest):
+    url = not_approved_url(request.file_name)
+    return {"url": url}
+
+@app.post("/approve")
+def approve(request: imageAdmin):
+    file_name, lat, lng = request.filename, request.lat, request.lng
+    if approve_image(file_name, lat, lng):
+        return {"status":"ok"}
+    return {"status":"error"}
+
+@app.post("/reject")
+def reject(request: imageAdmin):
+    file_name = request.filename
+    if reject_image(file_name):
+        return {"status": "ok"}        
+    return {"status":"error"}
 
  # ----- END -----

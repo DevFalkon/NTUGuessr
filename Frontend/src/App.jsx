@@ -9,6 +9,7 @@ import GamePage from './pages/GamePage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage'
+import AdminPage from './pages/AdminPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import {GameProvider} from './components/GameHandler'
 
@@ -28,6 +29,13 @@ function App() {
           
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage/>}/>
+          <Route path='/admin' 
+            element={
+              <ProtectedRoute>
+                <AdminPage/>
+              </ProtectedRoute>
+            }
+          />
           
           <Route 
             path="/" 

@@ -25,3 +25,11 @@ class SignupData(BaseModel):
 class DifficultyData(BaseModel):
     session_id: str
     difficulty: str
+
+class FileURLRequest(BaseModel):
+    file_name: str
+
+class imageAdmin(BaseModel):
+    filename: str
+    lat: float | None = None
+    lng: float | None = None

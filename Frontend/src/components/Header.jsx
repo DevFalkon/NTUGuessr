@@ -10,6 +10,8 @@ import {
 import { useAuth } from './AuthContext';
 import { EmojiEvents, Logout, LocationOn } from '@mui/icons-material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import AddTaskIcon from '@mui/icons-material/AddTask';
 import LoginIcon from '@mui/icons-material/Login';
 
 const Header = () => {
@@ -26,6 +28,8 @@ const Header = () => {
     logout();
     navigate('/login');
   };
+
+  const storedGroup = localStorage.getItem('user_group');
 
   return (
     <AppBar position="static" color="primary">
@@ -50,6 +54,18 @@ const Header = () => {
 
         {/* Right: Icons */}
         <Box>
+          {storedGroup === "admin" ? (
+            <>
+              <IconButton color='inherit' onClick={ () => navigate('/admin')} sx={{ mr: icon_spacing }}>
+                <AddTaskIcon/>
+              </IconButton>
+              
+              <IconButton color='inherit' onClick={ () => navigate('/user_management')} sx={{ mr: icon_spacing }}>
+                <AssignmentIndIcon/>
+              </IconButton>
+            </>
+          ):null}
+
           <IconButton color="inherit" onClick={() => navigate('/leaderboard')}>
             <EmojiEvents />
           </IconButton>

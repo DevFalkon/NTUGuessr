@@ -7,11 +7,17 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userGroup, setUserGroup] = useState("");
 
   // Initialize isLoggedIn on first load
   useEffect(() => {
     const sessionId = localStorage.getItem('session_id');
     setIsLoggedIn(!!sessionId);
+
+    const storedGroup = localStorage.getItem('user_group');
+    if (storedGroup) {
+      setUserGroup(storedGroup);
+    }
   }, []);
 
   // Optional: update isLoggedIn across tabs
@@ -22,6 +28,51 @@ export const AuthProvider = ({ children }) => {
     window.addEventListener('storage', checkLoginStatus);
     return () => window.removeEventListener('storage', checkLoginStatus);
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    console.log(userGroup);
+    if (userGroup === "admin" && 
+      (window.location.pathname !== "/admin" && 
+        window.location.pathname !== "/leaderboard" &&
+        window.location.pathname !== "/user_management")) {
+      navigate("/admin", { replace: true });
+    }
+
+    if (userGroup !== "admin" &&
+      (window.location.pathname === "/admin" ||
+      window.location.pathname === "/user_management")
+    ){
+      navigate("/", {replace: true});
+    }
+
+  }, [isLoggedIn, userGroup, navigate]);
+
+  const getUserGroup = async (username) => {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/user_group`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username }),
+      });
+
+      const data = await resp.json();
+
+      if (resp.ok) {
+        if (data.group) {
+          setUserGroup(data.group);
+          localStorage.setItem('user_group', data.group);
+        }
+      }
+    } catch (err) {
+      if (err.name === 'TypeError') {
+        throw new Error('Unable to connect to server');
+      } else {
+        throw err;
+      }
+    }
+  };
+
 
   // Login function
   const login = async (username, password) => {
@@ -42,8 +93,16 @@ export const AuthProvider = ({ children }) => {
         }
         else if (data.session_id){
           localStorage.setItem('session_id', data.session_id);
+          // Get user group if login in successfull
+          const group = await getUserGroup(username);
           setIsLoggedIn(true);
-          navigate('/');
+          
+          if (group === "admin"){
+            navigate("/admin");
+          }
+          else{
+            navigate('/');
+          }
         }
         else{
           throw new Error(data.login || 'Login failed');
@@ -75,6 +134,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     localStorage.removeItem('session_id');
+    localStorage.removeItem('user_group');
     setIsLoggedIn(false);
     navigate('/login');
   };
@@ -83,7 +143,7 @@ export const AuthProvider = ({ children }) => {
   const getSessionId = () => localStorage.getItem('session_id');
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout, getSessionId }}>
+    <AuthContext.Provider value={{ isLoggedIn, login, logout, getSessionId, userGroup }}>
       {children}
     </AuthContext.Provider>
   );

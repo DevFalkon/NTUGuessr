@@ -1,0 +1,11 @@
+{
+  "groups": [
+    { "name": "Dynari",   "color": "#8e0000" },
+    { "name": "Akrona",   "color": "#004c99" },
+    { "name": "Invicta",  "color": "#b38f00" },
+    { "name": "Solaris",  "color": "#7b1fa2" },
+    { "name": "Ephilia",  "color": "#1b5e20" }
+  ],
+
+  "medalColors" : ["#FFD700", "#C0C0C0", "#CD7F32"]
+}
