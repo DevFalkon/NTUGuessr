@@ -173,7 +173,7 @@ graph TD
     end
 
     subgraph Admin
-        A[Admin Panel]
+        A[React + Vite App]
     end
 
     subgraph Database
