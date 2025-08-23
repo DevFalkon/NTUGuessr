@@ -48,13 +48,6 @@ def main():
     }
     write_env_file("Backend/.env", backend_env)
 
-    # Admin panel .env.local
-    admin_env = {
-        "NEXT_PUBLIC_SUPABASE_URL": supabase_url,
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY": supabase_service_key,
-    }
-    write_env_file("Admin_panel/.env.local", admin_env)
-
     print("\nAll .env files created successfully!")
 
 if __name__ == "__main__":

@@ -12,7 +12,6 @@ The system consists of:
 - **Frontend** – Player-facing React/Vite application.
 - **Backend** – FastAPI service handling API requests and database operations.
 - **Telegram Bot** – Allows players to submit images and geolocation data via Telegram.
-- **Admin Panel** – Web interface for managing game data directly in Supabase.
 - **Supabase** – Cloud-based PostgreSQL database and file storage.
 
 ---
@@ -62,7 +61,7 @@ NTUGuessr/
 - Create a Supabase project at [supabase.com](https://supabase.com).
 - Note down your project credentials:
   - `SUPABASE_URL`
-  - `ANON_KEY`
+  - `SERVICE_KEY`
 
 ### 2. Create Required Tables
 
@@ -139,13 +138,11 @@ Follow the interactive prompts to enter:
 
 3. Backend (FastAPI) URL (optional, can be manually added later)
 
-The script will create `.env` or `.env.local` files in the appropriate subdirectories:
+The script will create `.env` files in the appropriate subdirectories:
 
 - Frontend/.env
 
 - Backend/.env
-
-- Admin_panel/.env.local
 
 After the script completes, you can start each component as usual.
 
@@ -154,9 +151,6 @@ After the script completes, you can start each component as usual.
 1.  [Backend/README.md](Backend/README.md)
 
 2.  [Frontend/README.md](Frontend/README.md)
-
-3.  [Admin_panel/README.md](Admin_panel/README.md)
-    - ⚠ **Note:** Currently no authentication is implemented — the panel interacts directly with Supabase without going through the backend. Future updates will include backend integration and admin role permissions.
 
 ---
 
@@ -179,7 +173,7 @@ graph TD
     end
 
     subgraph Admin
-        A[Next.js Admin Panel]
+        A[Admin Panel]
     end
 
     subgraph Database
@@ -189,7 +183,7 @@ graph TD
     F --> B
     T --> B
     B --> S
-    A --> S
+    A --> F
 ```
 
 ---
