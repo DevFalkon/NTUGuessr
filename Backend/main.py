@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
         print("Background task cancelled")
     
     # Stop the telegram bot properly
-    await bot_app.updater.stop_polling()
+    await bot_app.updater._stop_polling()
     await bot_app.stop()
     await bot_app.shutdown()
 

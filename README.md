@@ -185,15 +185,3 @@ graph TD
     B --> S
     A --> F
 ```
-
----
-
-## 🚀 Future Plans
-
-1. Backend integration for the Admin Panel.
-
-2. Role-based authentication and access control.
-
-3. Deployment using Docker and CI/CD pipelines.
-
-4. Additional game features and UI improvements.
